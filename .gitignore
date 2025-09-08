@@ -1,0 +1,205 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is an abuse to commit Pipfile.lock
+# Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak
+venv.bak
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+# Database files
+*.db
+*.sqlite3
+
+# Log files
+*.log
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Environment variables
+.env*
+!.env.example
+
+# FastAPI specific
+.coverage
+htmlcov/
+
+# MongoDB
+/data/db/
+mongod.lock
+
+# Redis
+dump.rdb
+appendonly.aof
+
+# Local configuration files
+config/local.py
+
+# Temporary files
+tmp/
+temp/
+
+# Test reports
+test-reports/
+junit.xml
+
+# Coverage reports
+coverage/
+htmlcov/
+
+# Documentation build output
+docs/_build
+docs/.build
+
+# Python cache
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Backup files
+*.bak
+*.backup
+
+# Application runtime files
+*.pid
+*.sock
+
+# Editor files
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+ehthumbs_vista.db
+Thumbs.db
