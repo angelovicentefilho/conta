@@ -6,11 +6,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel, Field
 
-from app.core.domain.user import User
-from app.core.services.budget_service import BudgetService
 from app.adapters.inbound.auth_middleware import get_current_user
 from app.adapters.inbound.dependencies import BudgetServiceDep
-
+from app.core.domain.user import User
+from app.core.services.budget_service import BudgetService
 
 router = APIRouter(prefix="/api/v1/budgets", tags=["Budgets"])
 
@@ -25,7 +24,7 @@ class BudgetResponse(BaseModel):
 
     model_config = {
         "populate_by_name": True,
-        "json_encoders": {Decimal: str, UUID: str}
+        "json_encoders": {Decimal: str, UUID: str},
     }
 
 

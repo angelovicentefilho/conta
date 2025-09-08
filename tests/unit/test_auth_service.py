@@ -1,15 +1,19 @@
-import pytest
 from datetime import datetime
 
+import pytest
+
+from app.adapters.outbound.email_service import MockEmailService
+from app.adapters.outbound.jwt_service import JWTTokenService
+from app.adapters.outbound.memory_repositories import (
+    InMemoryPasswordResetRepository,
+    InMemoryUserRepository,
+)
+from app.adapters.outbound.password_service import BcryptPasswordService
 from app.core.domain.user import UserCreate, UserLogin
 from app.core.services.auth_service import (
-    AuthService, AuthenticationError, UserAlreadyExistsError
-)
-from app.adapters.outbound.jwt_service import JWTTokenService
-from app.adapters.outbound.password_service import BcryptPasswordService
-from app.adapters.outbound.email_service import MockEmailService
-from app.adapters.outbound.memory_repositories import (
-    InMemoryUserRepository, InMemoryPasswordResetRepository
+    AuthenticationError,
+    AuthService,
+    UserAlreadyExistsError,
 )
 
 
@@ -21,7 +25,7 @@ def auth_service():
     token_service = JWTTokenService()
     password_service = BcryptPasswordService()
     email_service = MockEmailService()
-    
+
     return AuthService(
         user_repository=user_repo,
         password_reset_repository=password_reset_repo,
@@ -35,9 +39,7 @@ def auth_service():
 def valid_user_data():
     """Fixture com dados válidos de usuário."""
     return UserCreate(
-        name="João Silva",
-        email="joao@example.com",
-        password="MinhaSenh@123"
+        name="João Silva", email="joao@example.com", password="MinhaSenh@123"
     )
 
 
@@ -47,7 +49,7 @@ class TestUserRegistration:
     async def test_register_valid_user(self, auth_service, valid_user_data):
         """Deve registrar usuário com dados válidos."""
         user = await auth_service.register_user(valid_user_data)
-        
+
         assert user.name == valid_user_data.name
         assert user.email == valid_user_data.email
         assert user.id is not None
@@ -59,7 +61,7 @@ class TestUserRegistration:
         """Deve rejeitar usuário com e-mail duplicado."""
         # Registra primeiro usuário
         await auth_service.register_user(valid_user_data)
-        
+
         # Tenta registrar novamente
         with pytest.raises(UserAlreadyExistsError):
             await auth_service.register_user(valid_user_data)
@@ -70,7 +72,7 @@ class TestUserRegistration:
             UserCreate(
                 name="João Silva",
                 email="joao@example.com",
-                password="123"  # Senha muito simples
+                password="123",  # Senha muito simples
             )
 
 
@@ -83,14 +85,13 @@ class TestUserLogin:
         """Deve autenticar usuário com credenciais válidas."""
         # Registra usuário
         registered_user = await auth_service.register_user(valid_user_data)
-        
+
         # Faz login
         login_data = UserLogin(
-            email=valid_user_data.email,
-            password=valid_user_data.password
+            email=valid_user_data.email, password=valid_user_data.password
         )
         token = await auth_service.login_user(login_data)
-        
+
         assert token.access_token is not None
         assert token.token_type == "bearer"
         assert token.expires_in > 0
@@ -99,10 +100,9 @@ class TestUserLogin:
     async def test_login_invalid_email(self, auth_service):
         """Deve rejeitar login com e-mail inexistente."""
         login_data = UserLogin(
-            email="inexistente@example.com",
-            password="MinhaSenh@123"
+            email="inexistente@example.com", password="MinhaSenh@123"
         )
-        
+
         with pytest.raises(AuthenticationError):
             await auth_service.login_user(login_data)
 
@@ -110,13 +110,12 @@ class TestUserLogin:
         """Deve rejeitar login com senha incorreta."""
         # Registra usuário
         await auth_service.register_user(valid_user_data)
-        
+
         # Tenta login com senha incorreta
         login_data = UserLogin(
-            email=valid_user_data.email,
-            password="SenhaErrada123"
+            email=valid_user_data.email, password="SenhaErrada123"
         )
-        
+
         with pytest.raises(AuthenticationError):
             await auth_service.login_user(login_data)
 
@@ -129,14 +128,13 @@ class TestTokenValidation:
         # Registra e faz login
         registered_user = await auth_service.register_user(valid_user_data)
         login_data = UserLogin(
-            email=valid_user_data.email,
-            password=valid_user_data.password
+            email=valid_user_data.email, password=valid_user_data.password
         )
         token = await auth_service.login_user(login_data)
-        
+
         # Valida token
         user = await auth_service.get_user_from_token(token.access_token)
-        
+
         assert user is not None
         assert user.id == registered_user.id
         assert user.email == registered_user.email
@@ -159,9 +157,9 @@ class TestPasswordServices:
         """Deve criar hash da senha corretamente."""
         password_service = BcryptPasswordService()
         password = "MinhaSenh@123"
-        
+
         hashed = password_service.hash_password(password)
-        
+
         assert hashed != password
         assert len(hashed) > 0
         assert password_service.verify_password(password, hashed)
@@ -171,9 +169,9 @@ class TestPasswordServices:
         password_service = BcryptPasswordService()
         password = "MinhaSenh@123"
         wrong_password = "SenhaErrada"
-        
+
         hashed = password_service.hash_password(password)
-        
+
         assert not password_service.verify_password(wrong_password, hashed)
 
 
@@ -184,17 +182,17 @@ class TestJWTTokenService:
         """Deve criar e verificar token corretamente."""
         token_service = JWTTokenService()
         user_id = "user-123"
-        
+
         token = token_service.create_access_token(user_id)
         verified_user_id = token_service.verify_token(token)
-        
+
         assert token is not None
         assert verified_user_id == user_id
 
     def test_invalid_token_verification(self):
         """Deve rejeitar token inválido."""
         token_service = JWTTokenService()
-        
+
         result = token_service.verify_token("token-invalido")
         assert result is None
 
@@ -202,6 +200,6 @@ class TestJWTTokenService:
         """Deve retornar tempo de expiração correto."""
         token_service = JWTTokenService()
         expiration = token_service.get_token_expiration_time()
-        
+
         assert expiration > 0
         assert isinstance(expiration, int)

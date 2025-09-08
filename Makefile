@@ -8,7 +8,7 @@
 # Uso: make <comando>
 # Para ver todos os comandos disponíveis: make help
 
-.PHONY: help setup install install-dev dev run stop test test-cov lint format clean clean-pycache build docker-build docker-run services-up services-down services-logs services-status mongo-up mongo-down mongo-logs redis-up redis-down redis-logs
+.PHONY: help setup install install-dev dev run stop test test-cov lint lint-fix format clean clean-pycache build docker-build docker-run services-up services-down services-logs services-status mongo-up mongo-down mongo-logs redis-up redis-down redis-logs
 
 # Configurações
 PYTHON := python3.12
@@ -183,6 +183,21 @@ lint: ## 🔍 Verifica qualidade do código (flake8 + mypy)
 	@echo "$(CYAN)🔬 Executando mypy...$(NC)"
 	@$(MYPY) app
 	@echo "$(GREEN)✅ Verificação de qualidade concluída$(NC)"
+
+lint-fix: ## 🔧 Corrige automaticamente problemas de qualidade
+	@echo "$(BLUE)🔧 Corrigindo problemas de qualidade automaticamente...$(NC)"
+	@$(MAKE) check-venv
+	@echo "$(CYAN)🧹 Removendo imports não utilizados...$(NC)"
+	@$(VENV_PATH)/bin/autoflake --remove-all-unused-imports --recursive --in-place app tests
+	@echo "$(CYAN)🔤 Executando isort...$(NC)"
+	@$(ISORT) app tests
+	@echo "$(CYAN)⚫ Executando black...$(NC)"
+	@$(BLACK) app tests
+	@echo "$(CYAN)🔧 Corrigindo problemas de estilo com autopep8...$(NC)"
+	@$(VENV_PATH)/bin/autopep8 --in-place --recursive --max-line-length=79 --aggressive --aggressive app tests || true
+	@echo "$(GREEN)✅ Correções automáticas concluídas$(NC)"
+	@echo "$(CYAN)📊 Verificando resultado...$(NC)"
+	@$(FLAKE8) app tests && echo "$(GREEN)🎉 Nenhum problema de lint encontrado!$(NC)" || echo "$(YELLOW)⚠️  Execute 'make lint' para ver problemas restantes$(NC)"
 
 format: ## 🎨 Formata código (black + isort)
 	@echo "$(BLUE)🎨 Formatando código...$(NC)"

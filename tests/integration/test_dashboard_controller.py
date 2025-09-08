@@ -4,9 +4,9 @@ Testes de integração para os controladores de dashboard.
 Testa os endpoints REST do dashboard com dados reais.
 """
 
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -18,22 +18,19 @@ def get_auth_headers(client):
     register_data = {
         "name": "Test User",
         "email": "test@example.com",
-        "password": "TestPassword123!"
+        "password": "TestPassword123!",
     }
-    
+
     response = client.post("/auth/register", json=register_data)
     # 200 se já existe, 201 se criado
     assert response.status_code in [200, 201]
-    
+
     # Fazer login
-    login_data = {
-        "email": "test@example.com",
-        "password": "TestPassword123!"
-    }
-    
+    login_data = {"email": "test@example.com", "password": "TestPassword123!"}
+
     response = client.post("/auth/login", json=login_data)
     assert response.status_code == 200
-    
+
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
@@ -49,22 +46,21 @@ class TestDashboardControllers:
 
     def teardown_method(self):
         """Cleanup após cada teste."""
-        pass
 
     async def test_get_dashboard_balance_success(self):
         """Testa endpoint de saldo do dashboard com sucesso."""
         response = self.client.get(
             "/dashboard/balance", headers=self.auth_headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "total_balance" in data
         assert "balance_by_type" in data
         assert "accounts" in data
         assert "last_updated" in data
-        
+
         assert isinstance(data["total_balance"], (int, float, str))
         assert isinstance(data["balance_by_type"], dict)
         assert isinstance(data["accounts"], list)
@@ -74,10 +70,10 @@ class TestDashboardControllers:
         response = self.client.get(
             "/dashboard/summary", headers=self.auth_headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         required_fields = [
             "period_start",
             "period_end",
@@ -90,9 +86,9 @@ class TestDashboardControllers:
             "daily_average_expenses",
             "total_transactions",
             "income_transactions",
-            "expense_transactions"
+            "expense_transactions",
         ]
-        
+
         for field in required_fields:
             assert field in data
 
@@ -100,19 +96,19 @@ class TestDashboardControllers:
         """Testa endpoint de resumo com datas específicas."""
         start_date = datetime.now() - timedelta(days=30)
         end_date = datetime.now()
-        
+
         response = self.client.get(
             "/dashboard/summary",
             params={
                 "start_date": start_date.isoformat(),
-                "end_date": end_date.isoformat()
+                "end_date": end_date.isoformat(),
             },
-            headers=self.auth_headers
+            headers=self.auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "period_start" in data
         assert "period_end" in data
 
@@ -121,38 +117,38 @@ class TestDashboardControllers:
         response = self.client.get(
             "/dashboard/expenses-by-category", headers=self.auth_headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "period_start" in data
         assert "period_end" in data
         assert "total_expenses" in data
         assert "categories" in data
         assert "others_amount" in data
         assert "others_percentage" in data
-        
+
         assert isinstance(data["categories"], list)
 
     async def test_get_dashboard_expenses_by_category_with_params(self):
         """Testa endpoint de despesas por categoria com parâmetros."""
         start_date = datetime.now() - timedelta(days=30)
         end_date = datetime.now()
-        
+
         response = self.client.get(
             "/dashboard/expenses-by-category",
             params={
                 "start_date": start_date.isoformat(),
                 "end_date": end_date.isoformat(),
                 "limit": 5,
-                "include_others": True
+                "include_others": True,
             },
-            headers=self.auth_headers
+            headers=self.auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert len(data["categories"]) <= 5
 
     async def test_get_dashboard_balance_evolution_success(self):
@@ -160,17 +156,17 @@ class TestDashboardControllers:
         response = self.client.get(
             "/dashboard/balance-evolution", headers=self.auth_headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "period_start" in data
         assert "period_end" in data
         assert "granularity" in data
         assert "data_points" in data
         assert "trend" in data
         assert "trend_percentage" in data
-        
+
         assert isinstance(data["data_points"], list)
         assert data["trend"] in ["growing", "stable", "declining"]
 
@@ -178,21 +174,21 @@ class TestDashboardControllers:
         """Testa endpoint de evolução com parâmetros."""
         start_date = datetime.now() - timedelta(days=365)
         end_date = datetime.now()
-        
+
         response = self.client.get(
             "/dashboard/balance-evolution",
             params={
                 "start_date": start_date.isoformat(),
                 "end_date": end_date.isoformat(),
                 "granularity": "monthly",
-                "months_back": 6
+                "months_back": 6,
             },
-            headers=self.auth_headers
+            headers=self.auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert data["granularity"] == "monthly"
 
     async def test_get_dashboard_recent_transactions_success(self):
@@ -200,15 +196,15 @@ class TestDashboardControllers:
         response = self.client.get(
             "/dashboard/recent-transactions", headers=self.auth_headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "transactions" in data
         assert "total_recent_amount" in data
-        
+
         assert isinstance(data["transactions"], list)
-        
+
         # Verificar estrutura das transações se existirem
         if data["transactions"]:
             transaction = data["transactions"][0]
@@ -219,9 +215,9 @@ class TestDashboardControllers:
                 "amount",
                 "type",
                 "account_name",
-                "category_name"
+                "category_name",
             ]
-            
+
             for field in required_fields:
                 assert field in transaction
 
@@ -230,15 +226,15 @@ class TestDashboardControllers:
         response = self.client.get(
             "/dashboard/indicators", headers=self.auth_headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "financial_health_score" in data
         assert "indicators" in data
         assert "alerts" in data
         assert "suggestions" in data
-        
+
         assert isinstance(data["financial_health_score"], int)
         assert 0 <= data["financial_health_score"] <= 100
         assert isinstance(data["indicators"], list)
@@ -253,9 +249,9 @@ class TestDashboardControllers:
             "/dashboard/expenses-by-category",
             "/dashboard/balance-evolution",
             "/dashboard/recent-transactions",
-            "/dashboard/indicators"
+            "/dashboard/indicators",
         ]
-        
+
         for endpoint in endpoints:
             response = self.client.get(endpoint)  # Sem headers
             # Deve retornar erro de autenticação
@@ -266,9 +262,9 @@ class TestDashboardControllers:
         response = self.client.get(
             "/dashboard/balance-evolution",
             params={"granularity": "invalid"},
-            headers=self.auth_headers
+            headers=self.auth_headers,
         )
-        
+
         # Deve retornar erro de validação
         assert response.status_code == 422
 
@@ -277,9 +273,9 @@ class TestDashboardControllers:
         response = self.client.get(
             "/dashboard/expenses-by-category",
             params={"limit": 0},
-            headers=self.auth_headers
+            headers=self.auth_headers,
         )
-        
+
         # Deve retornar erro de validação
         assert response.status_code == 422
 
@@ -288,9 +284,9 @@ class TestDashboardControllers:
         response = self.client.get(
             "/dashboard/expenses-by-category",
             params={"limit": 100},
-            headers=self.auth_headers
+            headers=self.auth_headers,
         )
-        
+
         # Deve retornar erro de validação
         assert response.status_code == 422
 
@@ -299,9 +295,9 @@ class TestDashboardControllers:
         response = self.client.get(
             "/dashboard/balance-evolution",
             params={"months_back": 0},
-            headers=self.auth_headers
+            headers=self.auth_headers,
         )
-        
+
         # Deve retornar erro de validação
         assert response.status_code == 422
 
@@ -310,9 +306,9 @@ class TestDashboardControllers:
         response = self.client.get(
             "/dashboard/balance-evolution",
             params={"months_back": 50},
-            headers=self.auth_headers
+            headers=self.auth_headers,
         )
-        
+
         # Deve retornar erro de validação
         assert response.status_code == 422
 
@@ -328,7 +324,6 @@ class TestDashboardValidation:
 
     def teardown_method(self):
         """Cleanup após cada teste."""
-        pass
 
     async def test_summary_invalid_date_format(self):
         """Testa summary com formato de data inválido."""
@@ -336,11 +331,11 @@ class TestDashboardValidation:
             "/dashboard/summary",
             params={
                 "start_date": "invalid-date",
-                "end_date": "2024-01-01T00:00:00"
+                "end_date": "2024-01-01T00:00:00",
             },
-            headers=self.auth_headers
+            headers=self.auth_headers,
         )
-        
+
         assert response.status_code == 422
 
     async def test_expenses_category_invalid_date_format(self):
@@ -349,11 +344,11 @@ class TestDashboardValidation:
             "/dashboard/expenses-by-category",
             params={
                 "start_date": "2024-13-50",  # Data inválida
-                "end_date": "2024-01-01T00:00:00"
+                "end_date": "2024-01-01T00:00:00",
             },
-            headers=self.auth_headers
+            headers=self.auth_headers,
         )
-        
+
         assert response.status_code == 422
 
     async def test_balance_evolution_invalid_date_format(self):
@@ -362,11 +357,11 @@ class TestDashboardValidation:
             "/dashboard/balance-evolution",
             params={
                 "start_date": "not-a-date",
-                "end_date": "2024-01-01T00:00:00"
+                "end_date": "2024-01-01T00:00:00",
             },
-            headers=self.auth_headers
+            headers=self.auth_headers,
         )
-        
+
         assert response.status_code == 422
 
 
@@ -381,24 +376,23 @@ class TestDashboardPerformance:
 
     def teardown_method(self):
         """Cleanup após cada teste."""
-        pass
 
     async def test_dashboard_endpoints_response_time(self):
         """Testa tempo de resposta dos endpoints."""
         import time
-        
+
         endpoints = [
             "/dashboard/balance",
             "/dashboard/summary",
             "/dashboard/recent-transactions",
-            "/dashboard/indicators"
+            "/dashboard/indicators",
         ]
-        
+
         for endpoint in endpoints:
             start_time = time.time()
             response = self.client.get(endpoint, headers=self.auth_headers)
             end_time = time.time()
-            
+
             assert response.status_code == 200
             # Endpoints devem responder em menos de 2 segundos
             assert (end_time - start_time) < 2.0

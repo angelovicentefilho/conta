@@ -9,13 +9,13 @@ from decimal import Decimal
 from typing import List, Optional
 from uuid import UUID
 
-from app.core.domain.goal import Goal
 from app.core.domain.exceptions import (
-    GoalNotFoundError,
-    InvalidGoalAmountError,
     GoalAlreadyCompletedError,
     GoalDeadlinePassedError,
+    GoalNotFoundError,
+    InvalidGoalAmountError,
 )
+from app.core.domain.goal import Goal
 from app.core.ports.goal import GoalRepository, GoalService
 
 

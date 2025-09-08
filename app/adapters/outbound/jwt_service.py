@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
+
 from jose import jwt
 
 from app.config.settings import get_settings
@@ -17,18 +18,18 @@ class JWTTokenService(TokenServicePort):
         expiration = datetime.utcnow() + timedelta(
             seconds=self._settings.access_token_expire_seconds
         )
-        
+
         payload = {
             "sub": user_id,
             "exp": expiration,
             "iat": datetime.utcnow(),
-            "type": "access"
+            "type": "access",
         }
-        
+
         return jwt.encode(
             payload,
             self._settings.secret_key,
-            algorithm=self._settings.algorithm
+            algorithm=self._settings.algorithm,
         )
 
     def verify_token(self, token: str) -> Optional[str]:
@@ -37,18 +38,18 @@ class JWTTokenService(TokenServicePort):
             payload = jwt.decode(
                 token,
                 self._settings.secret_key,
-                algorithms=[self._settings.algorithm]
+                algorithms=[self._settings.algorithm],
             )
-            
+
             user_id = payload.get("sub")
             token_type = payload.get("type")
-            
+
             if user_id and token_type == "access":
                 return user_id
-                
+
         except jwt.JWTError:
             pass
-        
+
         return None
 
     def get_token_expiration_time(self) -> int:

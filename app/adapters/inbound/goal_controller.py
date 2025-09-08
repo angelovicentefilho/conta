@@ -6,11 +6,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
-from app.core.domain.user import User
-from app.core.services.goal_service import GoalService
 from app.adapters.inbound.auth_middleware import get_current_user
 from app.adapters.inbound.dependencies import GoalServiceDep
-
+from app.core.domain.user import User
+from app.core.services.goal_service import GoalService
 
 router = APIRouter(prefix="/api/v1/goals", tags=["Goals"])
 
@@ -27,7 +26,7 @@ class GoalResponse(BaseModel):
     model_config = {
         "from_attributes": True,
         "populate_by_name": True,
-        "json_encoders": {Decimal: str}
+        "json_encoders": {Decimal: str},
     }
 
 

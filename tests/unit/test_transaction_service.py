@@ -4,28 +4,37 @@ Testes unitários para TransactionServiceImpl e CategoryServiceImpl.
 Valida a lógica de negócio para gestão de transações e categorias.
 """
 
-import pytest
 from datetime import datetime
 from decimal import Decimal
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
 
-from app.core.domain.transaction import (
-    Category, TransactionType, RecurrenceType,
-    CreateTransactionRequest, CreateCategoryRequest
+import pytest
+
+from app.adapters.outbound.memory_repositories import (
+    InMemoryAccountRepository,
+    InMemoryCategoryRepository,
+    InMemoryTransactionRepository,
+    InMemoryUserRepository,
 )
 from app.core.domain.account import Account, AccountType
-from app.core.domain.user import User
 from app.core.domain.exceptions import (
-    TransactionNotFoundError, CategoryNotFoundError,
-    AccountNotFoundError, CategoryAlreadyExistsError,
-    CannotDeleteSystemCategoryError
+    AccountNotFoundError,
+    CannotDeleteSystemCategoryError,
+    CategoryAlreadyExistsError,
+    CategoryNotFoundError,
+    TransactionNotFoundError,
 )
+from app.core.domain.transaction import (
+    Category,
+    CreateCategoryRequest,
+    CreateTransactionRequest,
+    RecurrenceType,
+    TransactionType,
+)
+from app.core.domain.user import User
 from app.core.services.transaction_service import (
-    TransactionServiceImpl, CategoryServiceImpl
-)
-from app.adapters.outbound.memory_repositories import (
-    InMemoryTransactionRepository, InMemoryCategoryRepository,
-    InMemoryAccountRepository, InMemoryUserRepository
+    CategoryServiceImpl,
+    TransactionServiceImpl,
 )
 
 
@@ -43,7 +52,7 @@ class TestTransactionService:
             password_hash="Hashed_password1@",
             created_at=now,
             updated_at=now,
-            is_active=True
+            is_active=True,
         )
 
     @pytest.fixture
@@ -54,7 +63,7 @@ class TestTransactionService:
             user_id=UUID(user.id),
             name="Test Account",
             type=AccountType.CHECKING,
-            balance=Decimal("0.00")
+            balance=Decimal("0.00"),
         )
 
     @pytest.fixture
@@ -64,7 +73,7 @@ class TestTransactionService:
             id=uuid4(),
             user_id=UUID(user.id),
             name="Test Category",
-            type=TransactionType.EXPENSE
+            type=TransactionType.EXPENSE,
         )
 
     @pytest.fixture
@@ -89,13 +98,14 @@ class TestTransactionService:
         return repo
 
     @pytest.fixture
-    def service(self, transaction_repo, category_repo, account_repo,
-                user_repo):
+    def service(
+        self, transaction_repo, category_repo, account_repo, user_repo
+    ):
         """Serviço de transações."""
         return TransactionServiceImpl(
             transaction_repository=transaction_repo,
             category_repository=category_repo,
-            account_repository=account_repo
+            account_repository=account_repo,
         )
 
     async def test_create_transaction_success(
@@ -105,14 +115,14 @@ class TestTransactionService:
         category.type = TransactionType.INCOME
         await category_repo.create(category)
         await service._account_repo.create(account)
-        
+
         request = CreateTransactionRequest(
             account_id=account.id,
             category_id=category.id,
             type=TransactionType.INCOME,
             amount=Decimal("100.50"),
             description="Test transaction",
-            date=datetime.utcnow()
+            date=datetime.utcnow(),
         )
 
         transaction = await service.create_transaction(
@@ -124,10 +134,11 @@ class TestTransactionService:
             description=request.description,
             date=request.date,
             is_recurring=request.is_recurring,
-            recurrence_frequency= (
-                request.recurrence_frequency.value 
-                if request.recurrence_frequency else None
-            )
+            recurrence_frequency=(
+                request.recurrence_frequency.value
+                if request.recurrence_frequency
+                else None
+            ),
         )
 
         assert transaction.user_id == UUID(user.id)
@@ -145,11 +156,11 @@ class TestTransactionService:
             id=uuid4(),
             user_id=UUID(user.id),
             name="Salary Category",
-            type=TransactionType.INCOME
+            type=TransactionType.INCOME,
         )
         await category_repo.create(income_category)
         await service._account_repo.create(account)
-        
+
         request = CreateTransactionRequest(
             account_id=account.id,
             category_id=income_category.id,
@@ -158,7 +169,7 @@ class TestTransactionService:
             description="Salary",
             date=datetime.utcnow(),
             is_recurring=True,
-            recurrence_frequency=RecurrenceType.MONTHLY
+            recurrence_frequency=RecurrenceType.MONTHLY,
         )
 
         transaction = await service.create_transaction(
@@ -170,10 +181,11 @@ class TestTransactionService:
             description=request.description,
             date=request.date,
             is_recurring=request.is_recurring,
-            recurrence_frequency= (
-                request.recurrence_frequency.value 
-                if request.recurrence_frequency else None
-            )
+            recurrence_frequency=(
+                request.recurrence_frequency.value
+                if request.recurrence_frequency
+                else None
+            ),
         )
 
         assert transaction.is_recurring
@@ -184,14 +196,14 @@ class TestTransactionService:
     ):
         """Testa criação de transação com conta inexistente."""
         await category_repo.create(category)
-        
+
         request = CreateTransactionRequest(
             account_id=uuid4(),
             category_id=category.id,
             type=TransactionType.EXPENSE,
             amount=Decimal("100.00"),
             description="Test",
-            date=datetime.utcnow()
+            date=datetime.utcnow(),
         )
 
         with pytest.raises(AccountNotFoundError):
@@ -202,7 +214,7 @@ class TestTransactionService:
                 transaction_type=request.type,
                 amount=float(request.amount),
                 description=request.description,
-                date=request.date
+                date=request.date,
             )
 
     async def test_create_transaction_category_not_found(
@@ -216,7 +228,7 @@ class TestTransactionService:
             type=TransactionType.EXPENSE,
             amount=Decimal("100.00"),
             description="Test",
-            date=datetime.utcnow()
+            date=datetime.utcnow(),
         )
 
         with pytest.raises(CategoryNotFoundError):
@@ -227,7 +239,7 @@ class TestTransactionService:
                 transaction_type=request.type,
                 amount=float(request.amount),
                 description=request.description,
-                date=request.date
+                date=request.date,
             )
 
     async def test_get_user_transactions(
@@ -238,35 +250,35 @@ class TestTransactionService:
             id=uuid4(),
             user_id=UUID(user.id),
             name="Income Category 1",
-            type=TransactionType.INCOME
+            type=TransactionType.INCOME,
         )
         await category_repo.create(income_category_1)
         await service._account_repo.create(account)
-        
+
         request1 = CreateTransactionRequest(
             account_id=account.id,
             category_id=income_category_1.id,
             type=TransactionType.INCOME,
             amount=Decimal("50.00"),
             description="Transaction 1",
-            date=datetime.utcnow()
+            date=datetime.utcnow(),
         )
-        
+
         expense_category = Category(
             id=uuid4(),
             user_id=UUID(user.id),
             name="Expense Category",
-            type=TransactionType.EXPENSE
+            type=TransactionType.EXPENSE,
         )
         await category_repo.create(expense_category)
-        
+
         request2 = CreateTransactionRequest(
             account_id=account.id,
             category_id=expense_category.id,
             type=TransactionType.EXPENSE,
             amount=Decimal("30.00"),
             description="Transaction 2",
-            date=datetime.utcnow()
+            date=datetime.utcnow(),
         )
 
         await service.create_transaction(
@@ -276,7 +288,7 @@ class TestTransactionService:
             transaction_type=request1.type,
             amount=float(request1.amount),
             description=request1.description,
-            date=request1.date
+            date=request1.date,
         )
         await service.create_transaction(
             user_id=UUID(user.id),
@@ -285,7 +297,7 @@ class TestTransactionService:
             transaction_type=request2.type,
             amount=float(request2.amount),
             description=request2.description,
-            date=request2.date
+            date=request2.date,
         )
 
         transactions = await service.list_transactions(UUID(user.id))
@@ -298,14 +310,14 @@ class TestTransactionService:
         category.type = TransactionType.INCOME
         await category_repo.create(category)
         await service._account_repo.create(account)
-        
+
         request = CreateTransactionRequest(
             account_id=account.id,
             category_id=category.id,
             type=TransactionType.INCOME,
             amount=Decimal("100.00"),
             description="To be deleted",
-            date=datetime.utcnow()
+            date=datetime.utcnow(),
         )
 
         transaction = await service.create_transaction(
@@ -315,9 +327,9 @@ class TestTransactionService:
             transaction_type=request.type,
             amount=float(request.amount),
             description=request.description,
-            date=request.date
+            date=request.date,
         )
-        
+
         await service.delete_transaction(transaction.id, UUID(user.id))
 
         with pytest.raises(TransactionNotFoundError):
@@ -338,7 +350,7 @@ class TestCategoryService:
             password_hash="Hashed_password1@",
             created_at=now,
             updated_at=now,
-            is_active=True
+            is_active=True,
         )
 
     @pytest.fixture
@@ -362,12 +374,13 @@ class TestCategoryService:
     async def test_create_category_success(self, service, user):
         """Testa criação de categoria com sucesso."""
         request = CreateCategoryRequest(
-            name="Food",
-            type=TransactionType.EXPENSE
+            name="Food", type=TransactionType.EXPENSE
         )
 
         category = await service.create_category(
-            user_id=UUID(user.id), name=request.name, category_type=request.type
+            user_id=UUID(user.id),
+            name=request.name,
+            category_type=request.type,
         )
 
         assert category.user_id == UUID(user.id)
@@ -378,23 +391,28 @@ class TestCategoryService:
     async def test_create_category_duplicate_name(self, service, user):
         """Testa criação de categoria com nome duplicado."""
         request = CreateCategoryRequest(
-            name="Food",
-            type=TransactionType.EXPENSE
+            name="Food", type=TransactionType.EXPENSE
         )
 
         await service.create_category(
-            user_id=UUID(user.id), name=request.name, category_type=request.type
+            user_id=UUID(user.id),
+            name=request.name,
+            category_type=request.type,
         )
 
         with pytest.raises(CategoryAlreadyExistsError):
             await service.create_category(
-                user_id=UUID(user.id), name=request.name, category_type=request.type
+                user_id=UUID(user.id),
+                name=request.name,
+                category_type=request.type,
             )
 
     async def test_get_user_categories(self, service, user, category_repo):
         """Testa busca de categorias do usuário."""
         await service.create_category(
-            user_id=UUID(user.id), name="Food", category_type=TransactionType.EXPENSE
+            user_id=UUID(user.id),
+            name="Food",
+            category_type=TransactionType.EXPENSE,
         )
 
         system_category = Category.create_system_category(
@@ -403,31 +421,34 @@ class TestCategoryService:
         await category_repo.create(system_category)
 
         categories = await service.list_categories(UUID(user.id))
-        
+
         assert len(categories) == 2
         user_categories = [c for c in categories if not c.is_system]
         system_categories = [c for c in categories if c.is_system]
-        
+
         assert len(user_categories) == 1
         assert len(system_categories) == 1
 
     async def test_delete_category_success(self, service, user):
         """Testa exclusão de categoria do usuário."""
         request = CreateCategoryRequest(
-            name="To Delete",
-            type=TransactionType.EXPENSE
+            name="To Delete", type=TransactionType.EXPENSE
         )
 
         category = await service.create_category(
-            user_id=UUID(user.id), name=request.name, category_type=request.type
+            user_id=UUID(user.id),
+            name=request.name,
+            category_type=request.type,
         )
-        
+
         await service.delete_category(category.id, UUID(user.id))
 
         with pytest.raises(CategoryNotFoundError):
             await service.get_category_by_id(category.id, UUID(user.id))
 
-    async def test_delete_system_category_fails(self, service, user, category_repo):
+    async def test_delete_system_category_fails(
+        self, service, user, category_repo
+    ):
         """Testa que não é possível excluir categoria do sistema."""
         category = Category.create_system_category(
             "System Category", TransactionType.INCOME

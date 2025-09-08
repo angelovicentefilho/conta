@@ -10,6 +10,7 @@ class Budget(BaseModel):
     """
     Entidade de domínio que representa um orçamento mensal para uma categoria.
     """
+
     id: Optional[str] = Field(default=None, alias="_id")
     user_id: UUID = Field(..., alias="userId")
     category_id: UUID = Field(..., alias="categoryId")
@@ -28,5 +29,5 @@ class Budget(BaseModel):
             UUID: str,
             datetime: lambda v: v.isoformat(),
             Decimal: lambda v: str(v),
-        }
+        },
     }

@@ -20,32 +20,24 @@ class GoalRepository(ABC):
     @abstractmethod
     async def create(self, goal: Goal) -> Goal:
         """Cria uma nova meta."""
-        pass
 
     @abstractmethod
     async def get_by_id(self, goal_id: str, user_id: UUID) -> Optional[Goal]:
         """Busca meta por ID validando propriedade."""
-        pass
 
     @abstractmethod
     async def get_by_user_id(
-        self,
-        user_id: UUID,
-        limit: int = 50,
-        offset: int = 0
+        self, user_id: UUID, limit: int = 50, offset: int = 0
     ) -> List[Goal]:
         """Lista metas do usuário."""
-        pass
 
     @abstractmethod
     async def update(self, goal: Goal) -> Goal:
         """Atualiza uma meta existente."""
-        pass
 
     @abstractmethod
     async def delete(self, goal_id: str, user_id: UUID) -> bool:
         """Remove uma meta."""
-        pass
 
 
 class GoalService(ABC):
@@ -61,21 +53,18 @@ class GoalService(ABC):
         description: Optional[str] = None,
     ) -> Goal:
         """Cria uma nova meta financeira."""
-        pass
 
     @abstractmethod
     async def get_goal_by_id(
         self, goal_id: str, user_id: UUID
     ) -> Optional[Goal]:
         """Busca meta por ID."""
-        pass
 
     @abstractmethod
     async def list_goals(
         self, user_id: UUID, limit: int = 50, offset: int = 0
     ) -> List[Goal]:
         """Lista as metas do usuário."""
-        pass
 
     @abstractmethod
     async def update_goal(
@@ -88,16 +77,13 @@ class GoalService(ABC):
         deadline: Optional[datetime] = None,
     ) -> Goal:
         """Atualiza os detalhes de uma meta."""
-        pass
 
     @abstractmethod
     async def delete_goal(self, goal_id: str, user_id: UUID) -> None:
         """Exclui uma meta."""
-        pass
 
     @abstractmethod
     async def add_contribution(
         self, goal_id: str, user_id: UUID, amount: Decimal
     ) -> Goal:
         """Adiciona uma contribuição a uma meta."""
-        pass

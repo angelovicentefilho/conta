@@ -1,25 +1,31 @@
 """
-Testes unitários simplificados para TransactionServiceImpl e CategoryServiceImpl.
+Testes unitários simplificados para TransactionServiceImpl e
+CategoryServiceImpl.
 
 Valida a lógica de negócio básica para gestão de transações e categorias.
 """
 
-import pytest
 from datetime import datetime
 from decimal import Decimal
 from uuid import uuid4
 
-from app.core.domain.transaction import (
-    TransactionType, CreateTransactionRequest, CreateCategoryRequest
+import pytest
+
+from app.adapters.outbound.memory_repositories import (
+    InMemoryAccountRepository,
+    InMemoryCategoryRepository,
+    InMemoryTransactionRepository,
 )
 from app.core.domain.account import Account, AccountType
+from app.core.domain.transaction import (
+    CreateCategoryRequest,
+    CreateTransactionRequest,
+    TransactionType,
+)
 from app.core.domain.user import User
 from app.core.services.transaction_service import (
-    TransactionServiceImpl, CategoryServiceImpl
-)
-from app.adapters.outbound.memory_repositories import (
-    InMemoryTransactionRepository, InMemoryCategoryRepository,
-    InMemoryAccountRepository
+    CategoryServiceImpl,
+    TransactionServiceImpl,
 )
 
 
@@ -37,7 +43,7 @@ class TestTransactionServiceBasic:
             password_hash="hashed",
             created_at=now,
             updated_at=now,
-            is_active=True
+            is_active=True,
         )
 
     @pytest.fixture
@@ -53,7 +59,7 @@ class TestTransactionServiceBasic:
             is_primary=True,
             created_at=now,
             updated_at=now,
-            is_active=True
+            is_active=True,
         )
 
     @pytest.fixture
@@ -65,7 +71,7 @@ class TestTransactionServiceBasic:
         return TransactionServiceImpl(
             transaction_repository=transaction_repo,
             account_repository=account_repo,
-            category_repository=category_repo
+            category_repository=category_repo,
         )
 
     @pytest.fixture
@@ -82,9 +88,9 @@ class TestTransactionServiceBasic:
             type=TransactionType.EXPENSE,
             amount=Decimal("100.00"),
             description="Test transaction",
-            date=datetime.now()
+            date=datetime.now(),
         )
-        
+
         assert request.type == TransactionType.EXPENSE
         assert request.amount == Decimal("100.00")
         assert request.description == "Test transaction"
@@ -92,10 +98,9 @@ class TestTransactionServiceBasic:
     def test_create_category_request_valid(self):
         """Deve criar request de categoria válido."""
         request = CreateCategoryRequest(
-            name="Test Category",
-            type=TransactionType.EXPENSE
+            name="Test Category", type=TransactionType.EXPENSE
         )
-        
+
         assert request.name == "Test Category"
         assert request.type == TransactionType.EXPENSE
 

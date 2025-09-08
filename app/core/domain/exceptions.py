@@ -3,7 +3,6 @@ from typing import Optional
 
 class FinAppException(Exception):
     """Base exception for the application."""
-    pass
 
 
 class AccountAlreadyExistsError(FinAppException):
@@ -40,7 +39,6 @@ class InvalidTransactionAmountError(FinAppException):
 
 class TransactionError(FinAppException):
     """Base exception for transaction errors."""
-    pass
 
 
 class AccountNotFoundError(FinAppException):

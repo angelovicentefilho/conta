@@ -1,30 +1,34 @@
+import secrets
 from datetime import datetime, timedelta
 from typing import Optional
-import secrets
 
 from app.core.domain.user import (
-    UserCreate, UserLogin, UserResponse, Token,
-    ForgotPasswordRequest, ResetPasswordRequest
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+    Token,
+    UserCreate,
+    UserLogin,
+    UserResponse,
 )
 from app.core.ports.auth import (
-    UserRepositoryPort, PasswordResetRepositoryPort,
-    TokenServicePort, PasswordServicePort, EmailServicePort
+    EmailServicePort,
+    PasswordResetRepositoryPort,
+    PasswordServicePort,
+    TokenServicePort,
+    UserRepositoryPort,
 )
 
 
 class AuthenticationError(Exception):
     """Erro de autenticação."""
-    pass
 
 
 class UserAlreadyExistsError(Exception):
     """Usuário já existe."""
-    pass
 
 
 class InvalidTokenError(Exception):
     """Token inválido."""
-    pass
 
 
 class AuthService:
@@ -62,28 +66,24 @@ class AuthService:
         user_to_create = UserCreate(
             name=user_data.name,
             email=user_data.email,
-            password=password_hash  # Aqui já é o hash
+            password=password_hash,  # Aqui já é o hash
         )
 
         # Salva no repositório
-        created_user = await self._user_repository.create_user(
-            user_to_create
-        )
+        created_user = await self._user_repository.create_user(user_to_create)
 
         return UserResponse(
             id=created_user.id,
             name=created_user.name,
             email=created_user.email,
             created_at=created_user.created_at,
-            updated_at=created_user.updated_at
+            updated_at=created_user.updated_at,
         )
 
     async def login_user(self, login_data: UserLogin) -> Token:
         """Autentica um usuário e retorna token."""
         # Busca usuário
-        user = await self._user_repository.get_user_by_email(
-            login_data.email
-        )
+        user = await self._user_repository.get_user_by_email(login_data.email)
         if not user or not user.is_active:
             raise AuthenticationError("Credenciais inválidas")
 
@@ -102,13 +102,13 @@ class AuthService:
             name=user.name,
             email=user.email,
             created_at=user.created_at,
-            updated_at=user.updated_at
+            updated_at=user.updated_at,
         )
 
         return Token(
             access_token=access_token,
             expires_in=expires_in,
-            user=user_response
+            user=user_response,
         )
 
     async def get_user_from_token(self, token: str) -> Optional[UserResponse]:
@@ -126,7 +126,7 @@ class AuthService:
             name=user.name,
             email=user.email,
             created_at=user.created_at,
-            updated_at=user.updated_at
+            updated_at=user.updated_at,
         )
 
     async def request_password_reset(
@@ -159,9 +159,7 @@ class AuthService:
 
         return True
 
-    async def reset_password(
-        self, reset_data: ResetPasswordRequest
-    ) -> bool:
+    async def reset_password(self, reset_data: ResetPasswordRequest) -> bool:
         """Reseta a senha do usuário."""
         # Verifica token
         token_hash = self._password_service.hash_password(reset_data.token)

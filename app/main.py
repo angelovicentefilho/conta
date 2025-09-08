@@ -12,9 +12,9 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config.settings import get_settings
-from app.adapters.inbound.health_controller import health_router
 from app.adapters.inbound.auth_controller import router as auth_router
+from app.adapters.inbound.health_controller import health_router
+from app.config.settings import get_settings
 
 # Configuração do logger
 logger = logging.getLogger(__name__)
@@ -24,18 +24,18 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     Gerencia o ciclo de vida da aplicação.
-    
+
     Configura recursos na inicialização e limpa na finalização.
     """
     settings = get_settings()
-    
+
     # Startup
     logger.info(f"Iniciando {settings.app_name} v{settings.app_version}")
     logger.info(f"Ambiente: {settings.environment}")
     logger.info(f"Debug: {settings.debug}")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Finalizando aplicação...")
 
@@ -43,12 +43,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 def create_app() -> FastAPI:
     """
     Factory function para criar a aplicação FastAPI.
-    
+
     Returns:
         FastAPI: Instância configurada da aplicação
     """
     settings = get_settings()
-    
+
     # Configuração da aplicação
     app = FastAPI(
         title=settings.app_name,
@@ -61,7 +61,7 @@ def create_app() -> FastAPI:
         redoc_url="/redoc" if settings.debug else None,
         openapi_url="/openapi.json" if settings.debug else None,
     )
-    
+
     # Configuração do CORS
     app.add_middleware(
         CORSMiddleware,
@@ -70,39 +70,43 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
         allow_headers=["*"],
     )
-    
+
     # Registro das rotas
     app.include_router(health_router)
     app.include_router(auth_router)
-    
+
     # Importar e registrar router de contas
     from app.adapters.inbound.account_controller import (
-        router as account_router
+        router as account_router,
     )
+
     app.include_router(account_router)
-    
+
     # Importar e registrar routers de transações e categorias
-    from app.adapters.inbound.transaction_controller import (
-        router as transaction_router
-    )
     from app.adapters.inbound.category_controller import (
-        router as category_router
+        router as category_router,
     )
+    from app.adapters.inbound.transaction_controller import (
+        router as transaction_router,
+    )
+
     app.include_router(transaction_router)
     app.include_router(category_router)
-    
+
     # Importar e registrar router de dashboard
     from app.adapters.controllers.dashboard_controller import (
-        router as dashboard_router
+        router as dashboard_router,
     )
+
     app.include_router(dashboard_router)
 
     # Importar e registrar routers de metas e orçamentos
-    from app.adapters.inbound.goal_controller import router as goal_router
     from app.adapters.inbound.budget_controller import router as budget_router
+    from app.adapters.inbound.goal_controller import router as goal_router
+
     app.include_router(goal_router)
     app.include_router(budget_router)
-    
+
     return app
 
 

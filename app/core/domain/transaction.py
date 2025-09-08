@@ -5,10 +5,10 @@ Este módulo contém as entidades e value objects relacionados ao registro
 de transações financeiras no sistema.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Optional, Any
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, field_validator
@@ -16,28 +16,28 @@ from pydantic import BaseModel, Field, field_validator
 
 class TransactionType(str, Enum):
     """Tipos de transação financeira."""
-    
-    INCOME = "income"    # Receita
+
+    INCOME = "income"  # Receita
     EXPENSE = "expense"  # Despesa
 
 
 class RecurrenceType(str, Enum):
     """Tipos de recorrência para transações."""
-    
-    WEEKLY = "weekly"      # Semanal
-    MONTHLY = "monthly"    # Mensal
+
+    WEEKLY = "weekly"  # Semanal
+    MONTHLY = "monthly"  # Mensal
     QUARTERLY = "quarterly"  # Trimestral
-    YEARLY = "yearly"      # Anual
+    YEARLY = "yearly"  # Anual
 
 
 class Transaction(BaseModel):
     """
     Entidade Transaction representando uma transação financeira.
-    
+
     Contém as regras de negócio para registro e gestão de movimentações
     financeiras entre contas e categorias.
     """
-    
+
     id: UUID = Field(default_factory=uuid4)
     user_id: UUID
     account_id: UUID
@@ -52,7 +52,7 @@ class Transaction(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     is_active: bool = True
 
-    @field_validator('amount')
+    @field_validator("amount")
     @classmethod
     def validate_amount(cls, v: Decimal) -> Decimal:
         """Valida o valor da transação."""
@@ -60,13 +60,13 @@ class Transaction(BaseModel):
             raise ValueError("Valor deve ser positivo")
         # Verifica se tem no máximo 2 casas decimais
         str_value = str(v)
-        if '.' in str_value:
-            decimal_places = len(str_value.split('.')[1])
+        if "." in str_value:
+            decimal_places = len(str_value.split(".")[1])
             if decimal_places > 2:
                 raise ValueError("Valor deve ter no máximo 2 casas decimais")
         return v
 
-    @field_validator('description')
+    @field_validator("description")
     @classmethod
     def validate_description(cls, v: str) -> str:
         """Valida e limpa a descrição da transação."""
@@ -75,33 +75,35 @@ class Transaction(BaseModel):
             raise ValueError("Descrição não pode estar vazia")
         return v
 
-    @field_validator('recurrence_frequency')
+    @field_validator("recurrence_frequency")
     @classmethod
-    def validate_recurrence_frequency(cls, v: Optional[RecurrenceType],
-                                      info: Any) -> Optional[RecurrenceType]:
+    def validate_recurrence_frequency(
+        cls, v: Optional[RecurrenceType], info: Any
+    ) -> Optional[RecurrenceType]:
         """Valida frequência de recorrência baseada no campo is_recurring."""
-        values = info.data if hasattr(info, 'data') else {}
-        is_recurring = values.get('is_recurring', False)
-        
+        values = info.data if hasattr(info, "data") else {}
+        is_recurring = values.get("is_recurring", False)
+
         if is_recurring and v is None:
             raise ValueError(
                 "Frequência de recorrência é obrigatória para "
                 "transações recorrentes"
             )
-        
+
         if not is_recurring and v is not None:
             raise ValueError(
                 "Frequência de recorrência deve ser None para "
                 "transações não recorrentes"
             )
-        
+
         return v
 
-    @field_validator('date')
+    @field_validator("date")
     @classmethod
     def validate_date(cls, v: datetime) -> datetime:
         """Valida a data da transação."""
         from datetime import datetime, timedelta
+
         now = datetime.utcnow()
         # Permite até 30 dias no futuro para transações planejadas
         future_limit = now + timedelta(days=30)
@@ -125,18 +127,19 @@ class Transaction(BaseModel):
             raise ValueError("Descrição não pode estar vazia")
         if len(new_description) > 500:
             raise ValueError("Descrição não pode ter mais de 500 caracteres")
-        
+
         self.description = new_description
         self.updated_at = datetime.utcnow()
 
     def update_date(self, new_date: datetime) -> None:
         """Atualiza a data da transação."""
         now = datetime.utcnow()
-        if new_date > now.replace(day=min(now.day + 30, 31)):
+        max_future_date = now + timedelta(days=30)
+        if new_date > max_future_date:
             raise ValueError(
                 "Data da transação não pode ser mais de 30 dias no futuro"
             )
-        
+
         self.date = new_date
         self.updated_at = datetime.utcnow()
 
@@ -167,11 +170,11 @@ class Transaction(BaseModel):
         self.is_active = False
         self.updated_at = datetime.utcnow()
 
-    def duplicate(self, new_date: Optional[datetime] = None) -> 'Transaction':
+    def duplicate(self, new_date: Optional[datetime] = None) -> "Transaction":
         """Cria uma cópia da transação com nova data."""
         if new_date is None:
             new_date = datetime.utcnow()
-        
+
         return Transaction(
             user_id=self.user_id,
             account_id=self.account_id,
@@ -181,17 +184,17 @@ class Transaction(BaseModel):
             description=self.description,
             date=new_date,
             is_recurring=self.is_recurring,
-            recurrence_frequency=self.recurrence_frequency
+            recurrence_frequency=self.recurrence_frequency,
         )
 
 
 class Category(BaseModel):
     """
     Entidade Category representando uma categoria de transação.
-    
+
     Categorias podem ser do sistema (padrão) ou personalizadas do usuário.
     """
-    
+
     id: UUID = Field(default_factory=uuid4)
     user_id: Optional[UUID] = None  # None para categorias do sistema
     name: str = Field(min_length=1, max_length=100)
@@ -202,7 +205,7 @@ class Category(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     is_active: bool = True
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
         """Valida e limpa o nome da categoria."""
@@ -220,7 +223,7 @@ class Category(BaseModel):
             raise ValueError(
                 "Nome da categoria não pode ter mais de 100 caracteres"
             )
-        
+
         self.name = new_name
         self.updated_at = datetime.utcnow()
 
@@ -234,32 +237,24 @@ class Category(BaseModel):
     @classmethod
     def create_system_category(
         cls, name: str, type: TransactionType
-    ) -> 'Category':
+    ) -> "Category":
         """Cria uma categoria do sistema."""
-        return cls(
-            name=name,
-            type=type,
-            is_system=True
-        )
+        return cls(name=name, type=type, is_system=True)
 
     @classmethod
     def create_user_category(
         cls, user_id: UUID, name: str, type: TransactionType
-    ) -> 'Category':
+    ) -> "Category":
         """Cria uma categoria personalizada do usuário."""
-        return cls(
-            user_id=user_id,
-            name=name,
-            type=type,
-            is_system=False
-        )
+        return cls(user_id=user_id, name=name, type=type, is_system=False)
 
 
 # Schemas Pydantic para requests e responses
 
+
 class CreateTransactionRequest(BaseModel):
     """Schema para criação de transação."""
-    
+
     account_id: UUID
     category_id: UUID
     type: TransactionType
@@ -272,7 +267,7 @@ class CreateTransactionRequest(BaseModel):
 
 class UpdateTransactionRequest(BaseModel):
     """Schema para atualização de transação."""
-    
+
     account_id: Optional[UUID] = None
     category_id: Optional[UUID] = None
     type: Optional[TransactionType] = None
@@ -285,7 +280,7 @@ class UpdateTransactionRequest(BaseModel):
 
 class TransactionResponse(BaseModel):
     """Schema para resposta de transação."""
-    
+
     id: UUID
     account_id: UUID
     account_name: str
@@ -303,7 +298,7 @@ class TransactionResponse(BaseModel):
 
 class TransactionSummaryResponse(BaseModel):
     """Schema para listagem resumida de transações."""
-    
+
     id: UUID
     account_name: str
     category_name: str
@@ -315,14 +310,14 @@ class TransactionSummaryResponse(BaseModel):
 
 class CreateCategoryRequest(BaseModel):
     """Schema para criação de categoria."""
-    
+
     name: str = Field(min_length=1, max_length=100)
     type: TransactionType
 
 
 class CategoryResponse(BaseModel):
     """Schema para resposta de categoria."""
-    
+
     id: UUID
     name: str
     type: TransactionType
